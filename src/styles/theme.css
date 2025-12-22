@@ -1,0 +1,61 @@
+:root{
+  /* Ultra Dark Midnight Violet */
+  --bg0:#03020A;
+  --bg1:#050313;
+  --bg2:#07041C;
+
+  /* card layers (daha koyu, daha az beyaz) */
+  --card:rgba(255,255,255,.032);
+  --card2:rgba(255,255,255,.048);
+  --stroke:rgba(255,255,255,.085);
+
+  --txt:#F2F0FF;
+  --muted:rgba(242,240,255,.60);
+
+  /* koyu/premium morlar */
+  --p1:#4C1D95;   /* deep violet */
+  --p2:#7C3AED;   /* violet */
+  --p3:#06B6D4;   /* cyan (kısık) */
+  --p4:#DB2777;   /* pink (kısık) */
+
+  --ok:#22C55E;
+  --warn:#F59E0B;
+  --bad:#FB7185;
+
+  --shadow: 0 22px 70px rgba(0,0,0,.74);
+  --shadowSoft: 0 12px 36px rgba(0,0,0,.52);
+
+  --r10:10px;
+  --r16:16px;
+  --r22:22px;
+  --pad:18px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color:var(--txt);
+
+  /* daha koyu, daha az parıltı */
+  background:
+    radial-gradient(900px 520px at 12% 12%, rgba(76,29,149,.16), transparent 64%),
+    radial-gradient(820px 440px at 92% 2%, rgba(6,182,212,.06), transparent 62%),
+    radial-gradient(900px 520px at 72% 92%, rgba(219,39,119,.06), transparent 64%),
+    linear-gradient(180deg, var(--bg0), var(--bg1) 52%, var(--bg0));
+
+  overflow-x:hidden;
+}
+
+a{ color:inherit; text-decoration:none; }
+
+input, textarea, select{
+  color: rgba(242,240,255,.92);
+  caret-color: rgba(242,240,255,.95);
+}
+
+input::placeholder, textarea::placeholder{
+  color: rgba(242,240,255,.40);
+}

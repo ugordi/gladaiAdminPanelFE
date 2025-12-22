@@ -1,0 +1,46 @@
+src/
+  api/
+    http.js
+    auth.js
+    users.js
+    regions.js
+    enemies.js
+    items.js
+    settings.js
+    rankings.js
+    media.js
+
+  auth/
+    token.js
+    RequireAuth.jsx
+
+  components/
+    layout/
+      AdminLayout.jsx
+      Sidebar.jsx
+      Topbar.jsx
+    ui/
+      Card.jsx
+      Button.jsx
+      Input.jsx
+      Stat.jsx
+      Table.jsx
+      Toast.js
+
+  pages/
+    Login.jsx
+    Dashboard.jsx
+    Users.jsx
+    Regions.jsx
+    Enemies.jsx
+    Items.jsx
+    Rankings.jsx
+    Settings.jsx
+    NotFound.jsx
+
+  styles/
+    theme.css
+    app.css
+
+  App.jsx
+  index.js
