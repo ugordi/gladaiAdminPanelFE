@@ -1,34 +1,59 @@
 :root{
-  /* Ultra Dark Midnight Violet */
-  --bg0:#03020A;
-  --bg1:#050313;
-  --bg2:#07041C;
+  /* Base */
+  --bg0:#05040a;     /* ana arkaplan */
+  --bg1:#070611;
+  --bg2:#0b0918;
 
-  /* card layers (daha koyu, daha az beyaz) */
-  --card:rgba(255,255,255,.032);
-  --card2:rgba(255,255,255,.048);
-  --stroke:rgba(255,255,255,.085);
+    /* text */
+  --text: rgba(245,243,255,.94);
+  --muted: rgba(245,243,255,.58);
 
-  --txt:#F2F0FF;
-  --muted:rgba(242,240,255,.60);
+  /* card backgrounds (K O Y U) */
+  --card-bg: linear-gradient(180deg, rgba(10,8,18,.62), rgba(10,8,18,.40));
+  --card-bg-soft: linear-gradient(180deg, rgba(12,10,22,.52), rgba(12,10,22,.30));
+  --card-bg-solid: rgba(10,8,18,.78);
 
-  /* koyu/premium morlar */
-  --p1:#4C1D95;   /* deep violet */
-  --p2:#7C3AED;   /* violet */
-  --p3:#06B6D4;   /* cyan (kısık) */
-  --p4:#DB2777;   /* pink (kısık) */
+  /* stroke/shadow */
+  --stroke: rgba(255,255,255,.10);
 
-  --ok:#22C55E;
-  --warn:#F59E0B;
-  --bad:#FB7185;
+  /* glow rgb (sadece rgb, alpha yukarıda veriliyor) */
+  --glow-violet: 124,58,237;
+  --glow-cyan: 34,211,238;
+  --glow-pink: 219,39,119;
+  --glow-opacity: .85;
+  
+  /* Surfaces (kart / panel) */
+  --surface: rgba(12,10,22,.72);
+  --surface2: rgba(12,10,22,.52);
+  --surface3: rgba(12,10,22,.38);
 
-  --shadow: 0 22px 70px rgba(0,0,0,.74);
-  --shadowSoft: 0 12px 36px rgba(0,0,0,.52);
+  /* Stroke */
+  --stroke: rgba(255,255,255,.10);
+  --stroke2: rgba(255,255,255,.07);
 
-  --r10:10px;
+  /* Brand */
+  --p1:#4c1d95;      /* deep violet */
+  --p2:#7c3aed;      /* violet */
+  --cyan:#06b6d4;
+  --pink:#db2777;
+
+  /* States */
+  --ok:#22c55e;
+  --warn:#f59e0b;
+  --bad:#fb7185;
+
+  /* Effects */
+  --shadow: 0 26px 90px rgba(0,0,0,.72);
+  --shadowSoft: 0 14px 44px rgba(0,0,0,.55);
+
+  --r12:12px;
   --r16:16px;
   --r22:22px;
-  --pad:18px;
+
+  --accent-violet: 124,58,237;
+  --accent-cyan: 34,211,238;
+  --accent-red: 251,113,133;
+  --accent-green: 52,211,153;
 }
 
 *{ box-sizing:border-box; }
@@ -36,26 +61,32 @@ html,body{ height:100%; }
 
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  color:var(--txt);
-
-  /* daha koyu, daha az parıltı */
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  color: var(--text);
   background:
-    radial-gradient(900px 520px at 12% 12%, rgba(76,29,149,.16), transparent 64%),
-    radial-gradient(820px 440px at 92% 2%, rgba(6,182,212,.06), transparent 62%),
-    radial-gradient(900px 520px at 72% 92%, rgba(219,39,119,.06), transparent 64%),
+    radial-gradient(900px 520px at 12% 12%, rgba(76,29,149,.22), transparent 62%),
+    radial-gradient(820px 440px at 92% 6%, rgba(6,182,212,.10), transparent 62%),
+    radial-gradient(900px 520px at 70% 92%, rgba(219,39,119,.08), transparent 64%),
     linear-gradient(180deg, var(--bg0), var(--bg1) 52%, var(--bg0));
-
   overflow-x:hidden;
 }
 
 a{ color:inherit; text-decoration:none; }
 
-input, textarea, select{
-  color: rgba(242,240,255,.92);
-  caret-color: rgba(242,240,255,.95);
+:focus-visible{
+  outline: 2px solid rgba(124,58,237,.45);
+  outline-offset: 2px;
 }
 
-input::placeholder, textarea::placeholder{
-  color: rgba(242,240,255,.40);
+html, body, #root {
+  height: 100%;
+  background: #05040a !important;
+}
+
+body{
+  background:
+    radial-gradient(900px 520px at 12% 12%, rgba(76,29,149,.22), transparent 62%),
+    radial-gradient(820px 440px at 92% 6%, rgba(6,182,212,.10), transparent 62%),
+    radial-gradient(900px 520px at 70% 92%, rgba(219,39,119,.08), transparent 64%),
+    linear-gradient(180deg, var(--bg0), var(--bg1) 52%, var(--bg0)) !important;
 }

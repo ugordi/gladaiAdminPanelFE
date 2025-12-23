@@ -1,12 +1,13 @@
+// src/components/ui/Table.jsx
 import React from "react";
 
 /**
- * Elite Table (no external deps)
+ * Dark Elite Table (no external deps)
  *
  * props:
  *  - columns: [{ key, title, width, render?(row) }]
  *  - rows: array
- *  - rowKey: (row)=>string
+ *  - rowKey: (row,i)=>string
  *  - loading: bool
  *  - emptyText: string
  *  - onRowClick: (row)=>void
@@ -20,41 +21,22 @@ export default function Table({
   emptyText = "Kayıt bulunamadı.",
   onRowClick,
   footer,
+  className = "",
   style,
 }) {
+  const clickable = !!onRowClick;
+
   return (
-    <div
-      className="glass"
-      style={{
-        borderRadius: "var(--r22)",
-        overflow: "hidden",
-        border: "1px solid rgba(255,255,255,.12)",
-        ...style,
-      }}
-    >
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
-          <thead>
+    <div className={["ui-table", className].join(" ")} style={style}>
+      <div className="ui-table__scroll">
+        <table className="ui-table__table">
+          <thead className="ui-table__thead">
             <tr>
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  style={{
-                    textAlign: "left",
-                    fontSize: 12,
-                    color: "rgba(236,235,255,.70)",
-                    fontWeight: 900,
-                    letterSpacing: ".35px",
-                    padding: "12px 14px",
-                    borderBottom: "1px solid rgba(255,255,255,.10)",
-                    background:
-                      "linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03))",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 1,
-                    width: c.width,
-                    whiteSpace: "nowrap",
-                  }}
+                  className="ui-table__th"
+                  style={{ width: c.width }}
                 >
                   {c.title}
                 </th>
@@ -62,87 +44,43 @@ export default function Table({
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="ui-table__tbody">
             {loading ? (
               <tr>
-                <td
-                  colSpan={columns.length || 1}
-                  style={{ padding: 18, color: "var(--muted)" }}
-                >
+                <td colSpan={columns.length || 1} className="ui-table__empty">
                   Yükleniyor...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td
-                  colSpan={columns.length || 1}
-                  style={{ padding: 18, color: "var(--muted)" }}
-                >
+                <td colSpan={columns.length || 1} className="ui-table__empty">
                   {emptyText}
                 </td>
               </tr>
             ) : (
-              rows.map((row, idx) => {
-                const clickable = !!onRowClick;
-                return (
-                  <tr
-                    key={rowKey(row, idx)}
-                    onClick={() => clickable && onRowClick(row)}
-                    style={{
-                      cursor: clickable ? "pointer" : "default",
-                      background:
-                        idx % 2 === 0
-                          ? "rgba(255,255,255,.025)"
-                          : "rgba(255,255,255,.012)",
-                      transition: "filter .12s ease, background .12s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!clickable) return;
-                      e.currentTarget.style.filter = "brightness(1.06)";
-                      e.currentTarget.style.background = "rgba(167,139,250,.06)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.filter = "brightness(1)";
-                      e.currentTarget.style.background =
-                        idx % 2 === 0
-                          ? "rgba(255,255,255,.025)"
-                          : "rgba(255,255,255,.012)";
-                    }}
-                  >
-                    {columns.map((c) => (
-                      <td
-                        key={c.key}
-                        style={{
-                          padding: "12px 14px",
-                          borderBottom: "1px solid rgba(255,255,255,.06)",
-                          color: "rgba(236,235,255,.88)",
-                          fontSize: 13,
-                          verticalAlign: "middle",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {c.render ? c.render(row) : row?.[c.key]}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })
+              rows.map((row, idx) => (
+                <tr
+                  key={rowKey(row, idx)}
+                  className={[
+                    "ui-table__tr",
+                    idx % 2 === 0 ? "is-even" : "is-odd",
+                    clickable ? "is-clickable" : "",
+                  ].join(" ")}
+                  onClick={() => clickable && onRowClick(row)}
+                >
+                  {columns.map((c) => (
+                    <td key={c.key} className="ui-table__td">
+                      {c.render ? c.render(row) : row?.[c.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
 
-      {footer ? (
-        <div
-          style={{
-            padding: 12,
-            borderTop: "1px solid rgba(255,255,255,.10)",
-            background: "rgba(255,255,255,.03)",
-          }}
-        >
-          {footer}
-        </div>
-      ) : null}
+      {footer ? <div className="ui-table__footer">{footer}</div> : null}
     </div>
   );
 }

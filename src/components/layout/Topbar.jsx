@@ -21,7 +21,7 @@ export default function Topbar(){
     }}>
       <div>
         <div style={{ fontWeight: 900, fontSize: 14 }}>Yönetim</div>
-        <div style={{ fontSize: 12, color:"rgba(236,235,255,.62)", marginTop: 4 }}>
+        <div style={{ fontSize: 12, color:"rgba(20, 17, 90, 0.62)", marginTop: 4 }}>
           Dünya • Düşman • Eşya • Ayarlar
         </div>
       </div>

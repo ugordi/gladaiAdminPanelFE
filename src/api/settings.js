@@ -1,15 +1,18 @@
+// src/api/settings.js
 import { http } from "./http";
 
 /**
- * Settings bundle
+ * Settings
  * GET   /admin/settings
- * PATCH /admin/settings/admin    {points_per_level}
- * PATCH /admin/settings/energy   {battle_cost, regen_seconds?, ...}
- * PATCH /admin/settings/pvp      {steal_pct_min, steal_pct_max}
- * PUT   /admin/battle-rewards    {items:[...]}  veya direkt array
+ * PATCH /admin/settings/admin   {points_per_level}
+ * PATCH /admin/settings/energy  {battle_cost}
+ * PATCH /admin/settings/pvp     {steal_pct_min, steal_pct_max}
  *
- * XP rules display:
- * GET /admin/xp-rules (opsiyonel) -> {type:"fn_xp_needed", samples:[...]}
+ * Battle rewards (full replace)
+ * PUT   /admin/battle-rewards   body: array OR {items: array}
+ *
+ * XP rules
+ * GET   /admin/xp-rules
  */
 
 export async function getSettings() {
@@ -18,28 +21,25 @@ export async function getSettings() {
 }
 
 export async function updateAdminSettings(payload) {
-  // { points_per_level }
   const { data } = await http.patch("/admin/settings/admin", payload);
   return data;
 }
 
 export async function updateEnergySettings(payload) {
-  // { battle_cost, regen_seconds, ... }
   const { data } = await http.patch("/admin/settings/energy", payload);
   return data;
 }
 
 export async function updatePvpSettings(payload) {
-  // { steal_pct_min, steal_pct_max }
   const { data } = await http.patch("/admin/settings/pvp", payload);
   return data;
 }
 
-export async function replaceBattleRewards(payload) {
-  // payload: { items: [...] } veya direkt [...]
-  const body = Array.isArray(payload) ? { items: payload } : payload;
+export async function replaceBattleRewards(items) {
+  // backend: req.body array veya {items}
+  const body = Array.isArray(items) ? items : { items };
   const { data } = await http.put("/admin/battle-rewards", body);
-  return data;
+  return data; // {ok:true, items:[...]}
 }
 
 export async function getXpRules() {

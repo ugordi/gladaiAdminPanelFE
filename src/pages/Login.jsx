@@ -7,48 +7,25 @@ import { toast } from "../components/ui/Toast";
 import { loginApi, logAdminLoginApi } from "../api/auth";
 import { setToken } from "../auth/token";
 
-// Backend response normalize:
-// 1) { accessToken, refreshToken }
-// 2) { ok:true, data:{ accessToken, refreshToken } }
+/** 1) {accessToken, refreshToken}  2) {ok:true, data:{accessToken, refreshToken}} */
 function extractTokens(res) {
-  if (!res) return { accessToken: null, refreshToken: null };
-
-  const directAccess = res.accessToken;
-  const directRefresh = res.refreshToken;
-
-  const wrappedAccess = res?.data?.accessToken;
-  const wrappedRefresh = res?.data?.refreshToken;
-
   return {
-    accessToken: directAccess || wrappedAccess || null,
-    refreshToken: directRefresh || wrappedRefresh || null,
+    accessToken: res?.accessToken || res?.data?.accessToken || null,
+    refreshToken: res?.refreshToken || res?.data?.refreshToken || null,
   };
 }
 
 function pickErrorText(ex) {
-  // axios normalize vs klasik
   const data = ex?.response?.data ?? ex?.data;
-
-  // { ok:false, error:{message} } vb
   if (data && typeof data === "object") {
-    const m =
-      data.message ||
-      data.error?.message ||
-      data.error?.code ||
-      data.code ||
-      null;
-
+    const m = data.message || data.error?.message || data.error?.code || data.code;
     if (typeof m === "string") return m;
     try {
       return JSON.stringify(data);
-    } catch {
-      return "Giriş başarısız.";
-    }
+    } catch {}
   }
-
   if (typeof data === "string") return data;
   if (typeof ex?.message === "string") return ex.message;
-
   return "Giriş başarısız.";
 }
 
@@ -57,7 +34,6 @@ export default function Login() {
 
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
@@ -71,30 +47,15 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // IMPORTANT: backend body: { kullanici_adi, sifre }
-      const res = await loginApi({
-        username: username.trim(),
-        password,
-      });
-
+      const res = await loginApi({ username: username.trim(), password });
       const { accessToken, refreshToken } = extractTokens(res);
 
-      if (!accessToken) {
-        // debug istersen:
-        // console.log("loginApi raw:", res);
-        throw new Error("Sunucudan accessToken gelmedi.");
-      }
+      if (!accessToken) throw new Error("Sunucudan accessToken gelmedi.");
 
       setToken(accessToken);
+      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+      else localStorage.removeItem("refreshToken");
 
-      // refresh token sakla (backend logout/refresh için lazım)
-      if (refreshToken) {
-        localStorage.setItem("refreshToken", refreshToken);
-      } else {
-        localStorage.removeItem("refreshToken");
-      }
-
-      // opsiyonel audit (token http interceptor ile otomatik gidecek)
       try {
         await logAdminLoginApi({
           ua: navigator.userAgent,
@@ -114,11 +75,41 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 18 }}>
-      <div style={{ width: "100%", maxWidth: 460 }}>
-        {/* minimal brand */}
-        <div style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
-          <span
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        padding: 18,
+        position: "relative",
+        overflow: "hidden",
+        background:
+          "radial-gradient(900px 520px at 12% 10%, rgba(76,29,149,.28), transparent 62%)," +
+          "radial-gradient(820px 440px at 92% 6%, rgba(6,182,212,.10), transparent 64%)," +
+          "radial-gradient(900px 520px at 70% 92%, rgba(219,39,119,.10), transparent 66%)," +
+          "linear-gradient(180deg, #02010a, #050313 55%, #02010a)",
+      }}
+    >
+      {/* very subtle grid */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          inset: 0,
+          pointerEvents: "none",
+          opacity: 0.06,
+          backgroundImage:
+            "linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px)," +
+            "linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+          maskImage: "radial-gradient(560px 420px at 50% 30%, black, transparent 72%)",
+        }}
+      />
+
+      <div style={{ width: "100%", maxWidth: 440, position: "relative" }}>
+        {/* Top brand (clean) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+          <div
             className="glass"
             style={{
               width: 44,
@@ -126,9 +117,11 @@ export default function Login() {
               borderRadius: 16,
               display: "grid",
               placeItems: "center",
-              border: "1px solid rgba(139,92,246,.22)",
-              background: "linear-gradient(135deg, rgba(91,33,182,.18), rgba(255,255,255,.03))",
-              boxShadow: "0 22px 55px rgba(91,33,182,.14)",
+              border: "1px solid rgba(255,255,255,.10)",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))," +
+                "radial-gradient(120% 140% at 20% 10%, rgba(124,58,237,.28), transparent 60%)",
+              boxShadow: "0 18px 60px rgba(0,0,0,.60)",
             }}
           >
             <span
@@ -136,21 +129,29 @@ export default function Login() {
                 width: 10,
                 height: 10,
                 borderRadius: 999,
-                background: "linear-gradient(135deg, rgba(139,92,246,.92), rgba(34,211,238,.18))",
-                boxShadow: "0 0 16px rgba(139,92,246,.22)",
+                background: "linear-gradient(135deg, rgba(124,58,237,.95), rgba(6,182,212,.20))",
+                boxShadow: "0 0 18px rgba(124,58,237,.24)",
               }}
             />
-          </span>
+          </div>
 
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 20, fontWeight: 950, letterSpacing: ".2px" }}>Gladialore</div>
-            <div style={{ marginTop: 5, fontSize: 12.5, color: "var(--muted)" }}>Admin</div>
+            <div style={{ fontSize: 18, fontWeight: 950, letterSpacing: ".25px" }}>Gladialore</div>
+            <div style={{ marginTop: 4, fontSize: 12, color: "rgba(242,240,255,.55)" }}>Admin</div>
           </div>
         </div>
 
-        <Card title="Giriş" subtitle="Admin kullanıcı bilgilerinle devam et." glow>
-          <div style={{ height: 1, background: "rgba(255,255,255,.07)", margin: "0 0 14px 0" }} />
-
+        <Card
+          title="Giriş"
+          glow={false}
+          style={{
+            border: "1px solid rgba(255,255,255,.10)",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))," +
+              "radial-gradient(120% 140% at 18% 10%, rgba(76,29,149,.20), transparent 62%)",
+            boxShadow: "0 26px 90px rgba(0,0,0,.65)",
+          }}
+        >
           <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
             <Input
               label="Kullanıcı Adı"
@@ -158,6 +159,11 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
+              inputStyle={{
+                background: "rgba(0,0,0,.22)",
+                border: "1px solid rgba(255,255,255,.12)",
+                boxShadow: "0 12px 28px rgba(0,0,0,.45)",
+              }}
             />
 
             <Input
@@ -167,16 +173,20 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
+              inputStyle={{
+                background: "rgba(0,0,0,.22)",
+                border: "1px solid rgba(255,255,255,.12)",
+                boxShadow: "0 12px 28px rgba(0,0,0,.45)",
+              }}
             />
 
             {err ? (
               <div
-                className="glass"
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 14,
                   padding: 12,
-                  border: "1px solid rgba(251,113,133,.30)",
-                  background: "linear-gradient(135deg, rgba(251,113,133,.08), rgba(255,255,255,.02))",
+                  border: "1px solid rgba(251,113,133,.28)",
+                  background: "rgba(251,113,133,.07)",
                   color: "rgba(251,113,133,.92)",
                   fontSize: 13,
                   lineHeight: 1.35,
@@ -188,8 +198,18 @@ export default function Login() {
               </div>
             ) : null}
 
-            <div style={{ display: "grid", gap: 10, marginTop: 2 }}>
-              <Button type="submit" disabled={!canSubmit} loading={loading}>
+            <div style={{ display: "grid", gap: 10, marginTop: 4 }}>
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                loading={loading}
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(124,58,237,.95), rgba(76,29,149,.78) 58%, rgba(6,182,212,.18))",
+                  border: "1px solid rgba(124,58,237,.30)",
+                  boxShadow: "0 18px 52px rgba(124,58,237,.18)",
+                }}
+              >
                 Giriş Yap
               </Button>
 
@@ -200,7 +220,11 @@ export default function Login() {
                   setUsername("admin");
                   setPassword("");
                   setErr("");
-                  toast.info("Temizlendi.");
+                }}
+                style={{
+                  background: "rgba(0,0,0,.16)",
+                  border: "1px solid rgba(255,255,255,.10)",
+                  color: "rgba(242,240,255,.86)",
                 }}
               >
                 Temizle

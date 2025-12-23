@@ -1,3 +1,5 @@
+// Card.jsx
+
 import React from "react";
 
 /**
@@ -34,11 +36,10 @@ export default function Card({
             inset: -120,
             pointerEvents: "none",
             background:
-              "radial-gradient(700px 380px at 20% 15%, rgba(124,58,237,.18), transparent 60%)," +
-              "radial-gradient(640px 360px at 85% 20%, rgba(34,211,238,.11), transparent 62%)," +
-              "radial-gradient(680px 420px at 55% 95%, rgba(244,114,182,.10), transparent 65%)",
-            filter: "blur(10px)",
-            opacity: 1,
+              "radial-gradient(700px 380px at 20% 15%, rgba(91,33,182,.16), transparent 62%)," +
+              "radial-gradient(640px 360px at 85% 20%, rgba(8,145,178,.08), transparent 64%)," +
+              "radial-gradient(680px 420px at 55% 95%, rgba(190,24,93,.08), transparent 66%)",
+            opacity: 0.9,
           }}
         />
       )}

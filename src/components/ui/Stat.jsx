@@ -1,3 +1,5 @@
+// Stat.jsx
+
 import React from "react";
 
 /**
@@ -6,16 +8,16 @@ import React from "react";
  */
 const VAR = {
   violet: {
-    grad: "linear-gradient(135deg, rgba(124,58,237,.22), rgba(255,255,255,.05))",
-    dot: "linear-gradient(135deg, rgba(167,139,250,.95), rgba(124,58,237,.45))",
+    grad: "linear-gradient(135deg, rgba(91,33,182,.20), rgba(10,6,18,.35))",
+    dot: "linear-gradient(135deg, rgba(124,58,237,.95), rgba(91,33,182,.55))",
   },
   cyan: {
-    grad: "linear-gradient(135deg, rgba(34,211,238,.16), rgba(255,255,255,.05))",
-    dot: "linear-gradient(135deg, rgba(34,211,238,.95), rgba(167,139,250,.35))",
+    grad: "linear-gradient(135deg, rgba(8,145,178,.14), rgba(10,6,18,.35))",
+    dot: "linear-gradient(135deg, rgba(34,211,238,.60), rgba(91,33,182,.35))",
   },
   pink: {
-    grad: "linear-gradient(135deg, rgba(244,114,182,.14), rgba(255,255,255,.05))",
-    dot: "linear-gradient(135deg, rgba(244,114,182,.95), rgba(124,58,237,.35))",
+    grad: "linear-gradient(135deg, rgba(190,24,93,.14), rgba(10,6,18,.35))",
+    dot: "linear-gradient(135deg, rgba(244,114,182,.70), rgba(91,33,182,.35))",
   },
   ok: {
     grad: "linear-gradient(135deg, rgba(52,211,153,.14), rgba(255,255,255,.05))",
