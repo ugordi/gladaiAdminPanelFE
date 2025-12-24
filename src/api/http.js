@@ -11,8 +11,11 @@ import { getToken, clearToken } from "../auth/token";
  * - API hata mesajını normalize eder
  */
 
+export const baseURL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000/api/v1"; // ✅
+
+
 export const http = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:3000/api/v1",
+  baseURL,
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",

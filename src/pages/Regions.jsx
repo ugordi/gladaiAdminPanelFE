@@ -5,6 +5,8 @@ import Button from "../components/ui/Button";
 import Table from "../components/ui/Table";
 import Stat from "../components/ui/Stat";
 import { toast } from "../components/ui/Toast";
+import { uploadMedia } from "../api/media";
+import { resolveMediaUrl } from "../api/mediaUrl";
 
 import {
   listRegions,
@@ -109,10 +111,16 @@ export default function Regions() {
   const [editMode, setEditMode] = useState("create"); // create | edit
   const [editId, setEditId] = useState(null);
 
+  const [iconFile, setIconFile] = useState(null);
+  const [iconName, setIconName] = useState("");
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [iconPreviewUrl, setIconPreviewUrl] = useState("");
+
   const [form, setForm] = useState({
     name: "",
     min_level: 1,
     short_description: "",
+     icon_asset_id: null,   // ✅
     // story / icon_asset_id gibi alanlar backend eklenince buraya da eklenir
   });
 
@@ -240,10 +248,14 @@ export default function Regions() {
   function openEditModal(mode, region) {
     setEditMode(mode);
     setOpenEdit(true);
+    setIconFile(null);
+    setIconName("");
+    setUploadingIcon(false);
+    setIconPreviewUrl("");
 
     if (mode === "create") {
       setEditId(null);
-      setForm({ name: "", min_level: 1, short_description: "" });
+      setForm({ name: "", min_level: 1, short_description: "", icon_asset_id: null });
       return;
     }
 
@@ -252,6 +264,7 @@ export default function Regions() {
       name: region.name || "",
       min_level: Number(region.min_level || 1),
       short_description: region.short_description || "",
+      icon_asset_id: region.icon_asset_id || null, // ✅
     });
   }
 
@@ -260,6 +273,7 @@ export default function Regions() {
       name: form.name.trim(),
       min_level: Number(form.min_level || 1),
       short_description: form.short_description || "",
+      icon_asset_id: form.icon_asset_id || null,
     };
 
     if (!payload.name) {
@@ -552,6 +566,76 @@ export default function Regions() {
             value={form.short_description}
             onChange={(e) => setForm((p) => ({ ...p, short_description: e.target.value }))}
           />
+        
+        <Card title="Bölge İkonu" subtitle="Foto seç + isim ver, otomatik upload" glow={false}>
+          <div style={{ display: "grid", gap: 10 }}>
+            <Input
+              label="Dosya adı (filename)"
+              placeholder="trakya_ormanlari"
+              value={iconName}
+              onChange={(e) => setIconName(e.target.value)}
+            />
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                setIconFile(f);
+                if (f) setIconPreviewUrl(URL.createObjectURL(f));
+              }}
+            />
+
+            {iconPreviewUrl ? (
+              <div className="glass" style={{ padding: 10, borderRadius: 16 }}>
+                <img
+                  src={iconPreviewUrl}
+                  alt="preview"
+                  style={{ maxWidth: 180, borderRadius: 14, display: "block" }}
+                />
+              </div>
+            ) : null}
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <div style={{ width: 220 }}>
+                <Button
+                  variant="primary"
+                  loading={uploadingIcon}
+                  onClick={async () => {
+                    if (!iconFile) return toast.error("Önce foto seç.");
+                    if (!iconName.trim()) return toast.error("Dosya adı yaz.");
+
+                    setUploadingIcon(true);
+                    try {
+                      const asset = await uploadMedia(iconFile, { filename: iconName.trim() });
+
+                      // ✅ asset.id'yi region formuna yaz
+                      setForm((p) => ({ ...p, icon_asset_id: asset.id }));
+
+                      // istersen preview'ı artık server url’den göster:
+                      if (asset.url) setIconPreviewUrl(resolveMediaUrl(asset.url));
+
+                      toast.success("İkon yüklendi ve seçildi.");
+                    } catch (e) {
+                      toast.error(e?.message || "Upload başarısız.");
+                    } finally {
+                      setUploadingIcon(false);
+                    }
+                  }}
+                >
+                  Upload + Seç
+                </Button>
+              </div>
+
+              <div style={{ color: "var(--muted)", fontSize: 12 }}>
+                Seçilen icon_asset_id:{" "}
+                <span style={{ color: "rgba(236,235,255,.9)", fontWeight: 900 }}>
+                  {form.icon_asset_id || "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </Card>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
             <div style={{ width: 140 }}>

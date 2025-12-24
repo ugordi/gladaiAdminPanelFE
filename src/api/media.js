@@ -1,33 +1,27 @@
-// Media.js
-
-
+// src/api/Media.js
 import { http, toQuery } from "./http";
-
-/**
- * Media assets
- * GET  /admin/media?kind=image&limit&offset&q
- * POST /admin/media/upload (multipart)
- * POST /admin/media        {url, kind}
- */
 
 export async function listMedia(params = {}) {
   const { data } = await http.get("/admin/media", { params: toQuery(params) });
-  return data;
+  return data; // { items, total }
 }
 
 export async function createMediaAsset(payload) {
-  // { url, kind }
   const { data } = await http.post("/admin/media", payload);
-  return data;
+  return data; // asset row
 }
 
 export async function uploadMedia(file, extra = {}) {
   const form = new FormData();
   form.append("file", file);
-  Object.keys(extra).forEach((k) => form.append(k, extra[k]));
+  Object.keys(extra).forEach((k) => {
+    if (extra[k] !== undefined && extra[k] !== null) form.append(k, String(extra[k]));
+  });
 
   const { data } = await http.post("/admin/media/upload", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return data; // {id,url,kind}
+
+  // ✅ her iki formata da dayanıklı yap:
+  return data?.asset || data;
 }

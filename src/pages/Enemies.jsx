@@ -5,6 +5,8 @@ import Button from "../components/ui/Button";
 import Table from "../components/ui/Table";
 import Stat from "../components/ui/Stat";
 import { toast } from "../components/ui/Toast";
+import { uploadMedia } from "../api/media";       // dosya adın media.js ise böyle
+import { resolveMediaUrl } from "../api/mediaUrl";
 
 import {
   listEnemies,
@@ -205,6 +207,11 @@ export default function Enemies() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detail, setDetail] = useState(null);
 
+  const [iconFile, setIconFile] = useState(null);
+  const [iconName, setIconName] = useState("");
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [iconPreviewUrl, setIconPreviewUrl] = useState("");
+
   async function load() {
     setErr("");
     setLoading(true);
@@ -244,6 +251,13 @@ export default function Enemies() {
     setEditMode("create");
     setEditId(null);
     setForm({ ...EMPTY_FORM });
+
+    // ✅ ikon state reset
+    setIconFile(null);
+    setIconName("");
+    setUploadingIcon(false);
+    setIconPreviewUrl("");
+
     setOpenEdit(true);
   }
 
@@ -253,17 +267,33 @@ export default function Enemies() {
     setOpenEdit(true);
     setSaving(false);
 
+    // ✅ ikon state reset (başta)
+    setIconFile(null);
+    setIconName("");
+    setUploadingIcon(false);
+    setIconPreviewUrl("");
+
     try {
       const res = await getEnemy(id);
       const e = res?.enemy || res;
+
       setForm({
         ...EMPTY_FORM,
         ...e,
-        // ai_profile jsonb -> stringify
-        ai_profile: typeof e?.ai_profile === "string" ? e.ai_profile : JSON.stringify(e?.ai_profile ?? {}, null, 2),
+        ai_profile:
+          typeof e?.ai_profile === "string"
+            ? e.ai_profile
+            : JSON.stringify(e?.ai_profile ?? {}, null, 2),
         icon_asset_id: e?.icon_asset_id || "",
         battle_anim_url: e?.battle_anim_url || "",
       });
+
+      // ✅ preview ayarla (e artık burada tanımlı)
+      if (e?.icon_asset?.url) {
+        setIconPreviewUrl(resolveMediaUrl(e.icon_asset.url));
+      } else if (e?.icon_url) {
+        setIconPreviewUrl(resolveMediaUrl(e.icon_url));
+      }
     } catch (ex) {
       toast.error(ex?.message || "Düşman alınamadı.");
       setOpenEdit(false);
@@ -412,8 +442,7 @@ export default function Enemies() {
     }
   }
 
-  const columns = useMemo(
-    () => [
+  const columns =  [
       {
         key: "name",
         title: "Düşman",
@@ -482,9 +511,7 @@ export default function Enemies() {
           </div>
         ),
       },
-    ],
-    []
-  );
+    ];
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
@@ -680,13 +707,79 @@ export default function Enemies() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Card title="Görsel / Anim" subtitle="media_assets" glow={false}>
               <div style={{ display: "grid", gap: 10 }}>
-                <Input
-                  label="icon_asset_id (uuid)"
-                  placeholder="media_assets.id"
-                  value={form.icon_asset_id}
-                  onChange={(e) => setForm((p) => ({ ...p, icon_asset_id: e.target.value }))}
-                  hint="Medya seçici ekleriz; şimdilik id gir."
-                />
+               <Card title="Düşman İkonu" subtitle="Foto seç + isim ver, otomatik upload" glow={false}>
+                <div style={{ display: "grid", gap: 10 }}>
+                  <Input
+                    label="Dosya adı (filename)"
+                    placeholder="wolf_icon"
+                    value={iconName}
+                    onChange={(e) => setIconName(e.target.value)}
+                  />
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      setIconFile(f);
+                      if (f) setIconPreviewUrl(URL.createObjectURL(f));
+                    }}
+                  />
+
+                  {iconPreviewUrl ? (
+                    <div className="glass" style={{ padding: 10, borderRadius: 16 }}>
+                      <img
+                        src={iconPreviewUrl}
+                        alt="preview"
+                        style={{ maxWidth: 180, borderRadius: 14, display: "block" }}
+                      />
+                    </div>
+                  ) : null}
+
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <div style={{ width: 220 }}>
+                      <Button
+                        variant="primary"
+                        loading={uploadingIcon}
+                        onClick={async () => {
+                          if (!iconFile) return toast.error("Önce foto seç.");
+                          if (!iconName.trim()) return toast.error("Dosya adı yaz.");
+
+                          setUploadingIcon(true);
+                          try {
+                            const asset = await uploadMedia(iconFile, { filename: iconName.trim() });
+
+                            // ✅ icon_asset_id'ye yaz
+                            setForm((p) => ({ ...p, icon_asset_id: asset.id }));
+
+                            // ✅ upload sonrası preview server url’den
+                            if (asset.url) setIconPreviewUrl(resolveMediaUrl(asset.url));
+
+                            toast.success("İkon yüklendi ve seçildi.");
+                          } catch (e) {
+                            toast.error(e?.message || "Upload başarısız.");
+                          } finally {
+                            setUploadingIcon(false);
+                          }
+                        }}
+                      >
+                        Upload + Seç
+                      </Button>
+                    </div>
+
+                    <div style={{ color: "var(--muted)", fontSize: 12 }}>
+                      Seçilen icon_asset_id:{" "}
+                      <span style={{ color: "rgba(236,235,255,.9)", fontWeight: 900 }}>
+                        {form.icon_asset_id || "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ color: "var(--muted)", fontSize: 12 }}>
+                    Not: Kaydet’e basınca bu icon_asset_id düşmana yazılır.
+                  </div>
+                </div>
+              </Card>
                 <Input
                   label="battle_anim_url"
                   placeholder="https://..."
