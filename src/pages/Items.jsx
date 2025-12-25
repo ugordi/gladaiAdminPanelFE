@@ -5,6 +5,8 @@ import Button from "../components/ui/Button";
 import Table from "../components/ui/Table";
 import Stat from "../components/ui/Stat";
 import { toast } from "../components/ui/Toast";
+import { uploadMedia } from "../api/media";
+import { resolveMediaUrl } from "../api/mediaUrl";
 
 import {
   listItemTemplates,
@@ -189,6 +191,12 @@ export default function Items() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ ...EMPTY_ITEM });
 
+  // fotolar
+  const [iconFile, setIconFile] = useState(null);
+  const [iconName, setIconName] = useState("");
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [iconPreviewUrl, setIconPreviewUrl] = useState("");
+
   async function load() {
     setErr("");
     setLoading(true);
@@ -243,6 +251,10 @@ export default function Items() {
     setEditId(null);
     setForm({ ...EMPTY_ITEM });
     setOpenEdit(true);
+    setIconFile(null);
+    setIconName("");
+    setUploadingIcon(false);
+    setIconPreviewUrl("");
   }
 
   async function openEditItem(id) {
@@ -251,15 +263,43 @@ export default function Items() {
     setOpenEdit(true);
     setSaving(false);
 
+    // Upload UI state reset
+    setIconFile(null);
+    setIconName("");
+    setUploadingIcon(false);
+    setIconPreviewUrl("");
+
     try {
       const res = await getItemTemplate(id);
       const it = res?.item || res;
+
       setForm({
         ...EMPTY_ITEM,
         ...it,
         icon_asset_id: it?.icon_asset_id || "",
         default_asset_id: it?.default_asset_id || "",
       });
+
+      /**
+       * ✅ Preview ayarı
+       * Seçenek-1 (ÖNERİLEN): backend getItemTemplate response'unda icon url dönüyorsa:
+       *   it.icon_asset_url  veya it.icon_url  gibi bir field kullan
+       */
+      const iconUrl =
+        it?.icon_asset_url ||      // örn: "/uploads/iron.png"
+        it?.icon_url ||            // alternatif
+        it?.icon?.url ||           // join ile {icon:{url}}
+        "";
+
+      if (iconUrl) {
+        setIconPreviewUrl(resolveMediaUrl(iconUrl));
+      }
+
+      /**
+       * Seçenek-2 (backend url dönmüyorsa):
+       * Preview gösteremezsin. Ama en azından icon_asset_id dolu kalır.
+       * İstersen burada icon_asset_id ile media detail endpoint çağırıp url çekersin.
+       */
     } catch (e) {
       toast.error(e?.message || "Item alınamadı.");
       setOpenEdit(false);
@@ -345,8 +385,7 @@ export default function Items() {
     }
   }
 
-  const columns = useMemo(
-    () => [
+  const columns = [
       {
         key: "name",
         title: "Eşya",
@@ -428,9 +467,8 @@ export default function Items() {
           </div>
         ),
       },
-    ],
-    []
-  );
+    ]
+  ;
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
@@ -753,22 +791,97 @@ export default function Items() {
           </div>
 
           <Card title="Görseller" subtitle="media_assets refs" glow={false}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Input
-                label="icon_asset_id (uuid)"
-                placeholder="media_assets.id"
-                value={form.icon_asset_id}
-                onChange={(e) => setForm((p) => ({ ...p, icon_asset_id: e.target.value }))}
-              />
-              <Input
-                label="default_asset_id (uuid)"
-                placeholder="media_assets.id"
-                value={form.default_asset_id}
-                onChange={(e) => setForm((p) => ({ ...p, default_asset_id: e.target.value }))}
-              />
-            </div>
-            <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 8 }}>
-              İstersen sonraki adımda “Medya seçici” (thumbnail grid) ekleriz.
+            <div style={{ display: "grid", gap: 12 }}>
+              {/* UPLOAD BLOĞU */}
+              <Card title="İkon Upload" subtitle="public/uploads'a yükler ve icon_asset_id'ye yazar" glow={false}>
+                <div style={{ display: "grid", gap: 10 }}>
+                  <Input
+                    label="Dosya adı (filename)"
+                    placeholder="iron_sword_icon"
+                    value={iconName}
+                    onChange={(e) => setIconName(e.target.value)}
+                  />
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      setIconFile(f);
+                      if (f) setIconPreviewUrl(URL.createObjectURL(f));
+                    }}
+                  />
+
+                  {iconPreviewUrl ? (
+                    <div className="glass" style={{ padding: 10, borderRadius: 16 }}>
+                      <img
+                        src={iconPreviewUrl}
+                        alt="icon preview"
+                        style={{ maxWidth: 180, borderRadius: 14, display: "block" }}
+                      />
+                    </div>
+                  ) : null}
+
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <div style={{ width: 220 }}>
+                      <Button
+                        variant="primary"
+                        loading={uploadingIcon}
+                        onClick={async () => {
+                          if (!iconFile) return toast.error("Önce foto seç.");
+                          if (!iconName.trim()) return toast.error("Dosya adı yaz.");
+
+                          setUploadingIcon(true);
+                          try {
+                            const asset = await uploadMedia(iconFile, { filename: iconName.trim() });
+
+                            // ✅ item formuna yaz
+                            setForm((p) => ({ ...p, icon_asset_id: asset.id }));
+
+                            // ✅ server preview (url gelirse)
+                            if (asset.url) setIconPreviewUrl(resolveMediaUrl(asset.url));
+
+                            toast.success("İkon yüklendi ve seçildi.");
+                          } catch (e) {
+                            toast.error(e?.message || "Upload başarısız.");
+                          } finally {
+                            setUploadingIcon(false);
+                          }
+                        }}
+                      >
+                        Upload + Seç
+                      </Button>
+                    </div>
+
+                    <div style={{ color: "var(--muted)", fontSize: 12 }}>
+                      Seçilen icon_asset_id:{" "}
+                      <span style={{ color: "rgba(236,235,255,.9)", fontWeight: 900 }}>
+                        {form.icon_asset_id || "—"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* MEVCUT UUID INPUTLARI */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <Input
+                  label="icon_asset_id (uuid)"
+                  placeholder="media_assets.id"
+                  value={form.icon_asset_id}
+                  onChange={(e) => setForm((p) => ({ ...p, icon_asset_id: e.target.value }))}
+                />
+                <Input
+                  label="default_asset_id (uuid)"
+                  placeholder="media_assets.id"
+                  value={form.default_asset_id}
+                  onChange={(e) => setForm((p) => ({ ...p, default_asset_id: e.target.value }))}
+                />
+              </div>
+
+              <div style={{ color: "var(--muted)", fontSize: 12 }}>
+                İstersen sonraki adımda “Medya seçici” (thumbnail grid) ekleriz.
+              </div>
             </div>
           </Card>
 

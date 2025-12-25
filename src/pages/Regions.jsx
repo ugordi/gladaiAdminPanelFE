@@ -15,7 +15,6 @@ import {
   deleteRegion,
   listRegionEnemies,
   addEnemyToRegion,
-  updateRegionEnemyDef,
   removeEnemyFromRegion,
 } from "../api/regions";
 
@@ -133,9 +132,6 @@ export default function Regions() {
   const [allEnemies, setAllEnemies] = useState([]);
   const [enemyPick, setEnemyPick] = useState({
     enemy_type_id: "",
-    min_level: 1,
-    max_level: 1,
-    weight: 1,
   });
 
   async function load() {
@@ -318,7 +314,8 @@ export default function Regions() {
     setOpenDetail(true);
     setRegionDefs([]);
     setAllEnemies([]);
-    setEnemyPick({ enemy_type_id: "", min_level: 1, max_level: 1, weight: 1 });
+    setEnemyPick({ enemy_type_id: "" });
+
 
     setDefsLoading(true);
     try {
@@ -349,14 +346,7 @@ export default function Regions() {
     }
     const payload = {
       enemy_type_id: enemyPick.enemy_type_id,
-      min_level: Number(enemyPick.min_level || 1),
-      max_level: Number(enemyPick.max_level || 1),
-      weight: Number(enemyPick.weight || 1),
     };
-    if (payload.max_level < payload.min_level) {
-      toast.error("Max level, min level'dan küçük olamaz.");
-      return;
-    }
 
     try {
       await addEnemyToRegion(detailRegion.id, payload);
@@ -369,17 +359,6 @@ export default function Regions() {
     }
   }
 
-  async function updateDef(defId, patch) {
-    try {
-      await updateRegionEnemyDef(defId, patch);
-      toast.success("Güncellendi.");
-      const defs = await listRegionEnemies(detailRegion.id);
-      const items = defs?.items || defs || [];
-      setRegionDefs(Array.isArray(items) ? items : []);
-    } catch (e) {
-      toast.error(e?.message || "Güncellenemedi.");
-    }
-  }
 
   async function removeDef(defId) {
     const ok = window.confirm("Bu düşmanı bölgeden kaldırmak istiyor musun?");
@@ -709,7 +688,7 @@ export default function Regions() {
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "1fr 160px 160px 160px 220px",
+                        gridTemplateColumns: "1fr 220px",
                         gap: 10,
                         alignItems: "end",
                       }}
@@ -737,29 +716,6 @@ export default function Regions() {
                           ))}
                         </select>
                       </div>
-
-                      <Input
-                        label="Min Lv"
-                        type="number"
-                        min={1}
-                        value={enemyPick.min_level}
-                        onChange={(e) => setEnemyPick((p) => ({ ...p, min_level: e.target.value }))}
-                      />
-                      <Input
-                        label="Max Lv"
-                        type="number"
-                        min={1}
-                        value={enemyPick.max_level}
-                        onChange={(e) => setEnemyPick((p) => ({ ...p, max_level: e.target.value }))}
-                      />
-                      <Input
-                        label="Weight"
-                        type="number"
-                        min={1}
-                        value={enemyPick.weight}
-                        onChange={(e) => setEnemyPick((p) => ({ ...p, weight: e.target.value }))}
-                      />
-
                       <Button variant="primary" onClick={addDef}>
                         Ekle
                       </Button>
@@ -783,50 +739,19 @@ export default function Regions() {
                           </div>
                         ),
                       },
-                      { key: "min_level", title: "Min", render: (r) => r.min_level },
-                      { key: "max_level", title: "Max", render: (r) => r.max_level },
-                      { key: "weight", title: "Weight", render: (r) => r.weight },
                       {
                         key: "act",
                         title: "İşlem",
                         render: (r) => (
-                          <div style={{ display: "flex", gap: 10, width: 320 }}>
-                            <div style={{ width: 90 }}>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  updateDef(r.id, {
-                                    weight: Number(r.weight || 1) + 1,
-                                  })
-                                }
-                              >
-                                +W
-                              </Button>
-                            </div>
-                            <div style={{ width: 120 }}>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  updateDef(r.id, {
-                                    min_level: r.min_level,
-                                    max_level: r.max_level,
-                                    weight: r.weight,
-                                  })
-                                }
-                              >
-                                Kaydet
-                              </Button>
-                            </div>
-                            <div style={{ width: 90 }}>
+                          <div style={{ display: "flex", gap: 10, width: 120 }}>
+                            <div style={{ width: 110 }}>
                               <Button size="sm" variant="danger" onClick={() => removeDef(r.id)}>
                                 Sil
                               </Button>
                             </div>
                           </div>
                         ),
-                      },
+                      }
                     ]}
                     rows={regionDefs}
                     emptyText="Bu bölgede düşman tanımı yok."
